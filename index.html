@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPIDATA - Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use Inter font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // Matching Android XML colors
+                        'banglalink-orange': '#FF6600', 
+                        'primary-blue': '#3F51B5',
+                        'card-bg': '#F8F8F8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for aesthetics */
+        body::-webkit-scrollbar { width: 8px; }
+        body::-webkit-scrollbar-thumb { background-color: var(--theme-accent, #FF6600); border-radius: 4px; }
+        
+        /* Card styling */
+        .card { transition: all 0.3s ease; cursor: pointer; user-select: none; color: inherit !important; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .card:active { transform: translateY(0); opacity: 0.8; }
+
+        /* Style for the simulated progress bar spinner */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid var(--btn-bg-color, #FF6600); /* Themed color */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Result Text Area styling to mimic Android XML */
+        #resultText {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            line-height: 1.5;
+            font-family: monospace; /* Use monospace for data display */
+        }
+
+        /* Styling for the input fields to mimic Android */
+        .app-input {
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 8px;
+            transition: all 0.2s;
+            background-color: white;
+            color: black;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .app-input:focus {
+            outline: none;
+            border-color: #3F51B5;
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.3);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <!-- Main App Container -->
+    <div id="mainLayout" class="min-h-screen flex flex-col transition-colors duration-500">
+
+        <!-- ============================================== -->
+        <!-- 1. DASHBOARD VIEW (NOW THE DEFAULT/STARTING VIEW) -->
+        <!-- ============================================== -->
+        <section id="dashboardView" class="min-h-screen flex-col flex">
+            <!-- Scrollable Content -->
+            <main id="scrollContent" class="flex-grow overflow-y-auto p-4 md:p-6">
+                <div class="max-w-4xl mx-auto">
+                    
+                    <!-- Title Section -->
+                    <div class="mt-4 mb-8">
+                        <p id="greetingText" class="text-xl transition-colors duration-500">Welcome To,</p>
+                        <h1 id="userNameText" class="text-3xl md:text-4xl font-extrabold mt-1 transition-colors duration-500">SITE FINDER APP</h1>
+                    </div>
+                    
+                    <!-- Grid Menu (2 columns, responsive) -->
+                    <div id="gridMenu" class="grid grid-cols-2 gap-4 sm:gap-6">
+
+                        <!-- Card 1: Search -->
+                        <div id="cardSearch" class="card rounded-xl shadow-md p-4 text-center flex flex-col justify-center items-center h-36 border border-gray-200 transition-colors duration-500">
+                            <span class="text-4xl">🔎</span>
+                            <p class="mt-2 text-lg font-bold">Site Search</p>
+                        </div>
+
+                        <!-- Card 2: Web Link -->
+                        <div id="cardWeb" class="card rounded-xl shadow-md p-4 text-center flex flex-col justify-center items-center h-36 border border-gray-200 transition-colors duration-500">
+                            <span class="text-4xl">🌐</span>
+                            <p class="mt-2 text-lg font-bold">Web Link</p>
+                        </div>
+
+                        <!-- Card 3: Calculator -->
+                        <div id="cardCalculator" class="card rounded-xl shadow-md p-4 text-center flex flex-col justify-center items-center h-36 border border-gray-200 transition-colors duration-500">
+                            <span class="text-4xl">🧮</span>
+                            <p class="mt- ot-2 text-lg font-bold">Calculator</p>
+                        </div>
+
+                        <!-- Card 4: Instruction -->
+                        <div id="cardInstruction" class="card rounded-xl shadow-md p-4 text-center flex flex-col justify-center items-center h-36 border border-gray-200 transition-colors duration-500">
+                            <span class="text-4xl">📖</span>
+                            <p class="mt-2 text-lg font-bold">Instruction</p>
+                        </div>
+
+                        <!-- Card 5: Developer Info -->
+                        <div id="cardDeveloper" class="card rounded-xl shadow-md p-4 text-center flex flex-col justify-center items-center h-36 border border-gray-200 transition-colors duration-500">
+                            <span class="text-4xl">👨‍💻</span>
+                            <p class="mt-2 text-lg font-bold">Developer</p>
+                        </div>
+
+                        <!-- Card 6: Theme (Opens Modal) -->
+                        <div id="cardTheme" class="card rounded-xl shadow-md p-4 text-center flex flex-col justify-center items-center h-36 border border-gray-200 transition-colors duration-500">
+                            <span class="text-4xl">🎨</span>
+                            <p class="mt-2 text-lg font-bold">Theme</p>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+            <!-- Fixed Logout Button -->
+            <div class="p-4 pt-0 max-w-4xl mx-auto w-full sticky bottom-0">
+                <button id="logoutButton" class="w-full h-14 text-white hover:opacity-90 transition-all font-bold text-lg rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-colors duration-500">
+                    <span class="text-xl">🚪</span> 
+                    <span>Logout</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 2. SITE SEARCH VIEW (Hidden by Default) -->
+        <!-- ============================================== -->
+        <section id="searchView" class="hidden min-h-screen flex-col">
+            <!-- Toolbar -->
+            <header id="searchToolbar" class="h-14 shadow-md flex items-center px-4 transition-colors duration-500">
+                <button id="searchBackBtn" class="text-white text-2xl font-bold p-2 mr-4">
+                    <!-- Simple Back Arrow SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <h1 id="toolbarTitle" class="text-xl font-semibold transition-colors duration-500">GPIDATA</h1>
+            </header>
+
+            <!-- Scrollable Content -->
+            <div id="searchScrollContent" class="flex-grow overflow-y-auto p-5" style="background-color: #F9FAFC;">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex flex-col">
+
+                        <!-- Update Button (hidden initially) -->
+                        <button id="checkUpdateBtn" class="w-full py-3 mb-4 rounded-lg bg-red-500 hover:bg-red-600 text-white text-base font-semibold transition-all duration-300 shadow-md hidden">
+                            ⬇️ অ্যাপ আপডেট করুন
+                        </button>
+
+                        <!-- Search Box with Autocomplete History -->
+                        <input
+                            list="searchHistoryList"
+                            type="text"
+                            id="searchBox"
+                            placeholder="Site ID লিখুন"
+                            class="w-full h-12 px-5 text-gray-800 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-300"
+                        />
+                        <datalist id="searchHistoryList"></datalist>
+
+                        <!-- Search Button -->
+                        <button id="searchBtn" class="w-full py-3 mt-4 rounded-lg text-white text-base font-semibold transition-all duration-300 shadow-lg" style="background-color: #3F51B5;">
+                            🔍 Search
+                        </button>
+
+                        <!-- Progress Bar (Simulated Spinner) -->
+                        <div id="progressBar" class="flex justify-center items-center mt-5 hidden">
+                            <div class="loader" id="spinner"></div>
+                        </div>
+
+                        <!-- Result Text Area -->
+                        <pre id="resultText" class="mt-6 p-4 bg-white text-gray-700 text-base rounded-lg min-h-[100px] overflow-x-auto border border-gray-200 font-sans">
+অনুসন্ধান ফলাফল এখানে প্রদর্শিত হবে।
+                        </pre>
+
+                        <!-- Copy and Share Buttons -->
+                        <div class="flex mt-6 space-x-3">
+                            <button id="copyBtn" class="flex-1 py-3 rounded-lg text-white text-sm font-semibold transition-all duration-300 shadow-md" style="background-color: #FF9800;">
+                                📋 All Text Copy
+                            </button>
+                            <button id="shareBtn" class="flex-1 py-3 rounded-lg text-white text-sm font-semibold transition-all duration-300 shadow-md" style="background-color: #2196F3;">
+                                📤 শেয়ার করুন
+                            </button>
+                        </div>
+
+                        <!-- Open Map Button (hidden initially) -->
+                        <button id="openMapBtn" class="w-full py-3 mt-4 rounded-lg text-white text-base font-semibold transition-all duration-300 shadow-lg hidden" style="background-color: #4CAF50;">
+                            📍 লোকেশন দেখুন (Google Maps)
+                        </button>
+
+                        <!-- Footer Text -->
+                        <div class="mt-12 text-center text-sm text-gray-400 font-light">
+                            <p id="author_name">Dev: Hridoy</p>
+                            <p id="Version_name" class="mt-2">Version 5.0.1</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Theme Selection Modal -->
+    <div id="themeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Select App Theme</h2>
+            
+            <div id="themeOptions" class="grid grid-cols-2 gap-4">
+                <!-- Theme options will be populated by JS -->
+            </div>
+
+            <button id="closeModalButton" class="mt-8 w-full bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 font-semibold">Close</button>
+        </div>
+    </div>
+
+    <!-- General Message Modal (Replaces Toast/Alert) -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[1000]">
+        <!-- Content will be injected by showMessage() -->
+    </div>
+
+    <!-- JSON Data Modal (Not used, but kept for ID consistency) -->
+    <div id="jsonModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-[1001] p-4">
+        <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-lg h-3/4 flex flex-col">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">রিমোট JSON ডেটা (Debugging)</h2>
+            <div class="flex-grow overflow-auto bg-gray-100 p-3 rounded-lg mb-4 text-sm">
+                <pre id="jsonContent" class="text-gray-700 whitespace-pre-wrap break-words font-mono"></pre>
+                <div id="jsonLoadingSpinner" class="loader mx-auto hidden mt-8" style="--btn-bg-color: #3F51B5;"></div>
+            </div>
+            <button id="closeJsonModalButton" class="w-full bg-primary-blue text-white py-2 rounded-lg hover:opacity-90 font-semibold transition-colors duration-500" style="background-color: #3F51B5;">বন্ধ করুন</button>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const THEME_STORAGE_KEY = "SelectedTheme";
+        const THEME_DEFAULT = "Default";
+        // URL for Site Data Fetch (used in searchView)
+        const JSON_URL = "https://script.google.com/macros/s/AKfycbyqbg6VIsqTqiyM57hWg_sGgkUkk9YNMiI0aEbFzaiwAs4FI1PtQIoZzbxv6QgTaUB7/exec"; 
+        const KEY_LAST_SEARCH = "last_search";
+        const KEY_SEARCH_HISTORY = "search_history";
+
+        // State Variables
+        let currentLat = 0.0;
+        let currentLong = 0.0;
+        let finalResult = "";
+        let searchHistory = [];
+
+        // Theme Definitions (matching Java's THEME_COLORS)
+        const THEME_COLORS = {
+            "Default": { 
+                mainBg: "#FFFFFF", greetingTx: "#FF0000", userTx: "#FFA500", btnBg: "#FF6600", cardBg: "#FFFFFF", cardTx: "#222222", toolbarBg: "#3F51B5", toolbarTx: "#FFFFFF", searchBg: "#FFFFFF", searchTx: "#333333", accentColor: "#FF6600"
+            },
+            "Dark": { 
+                mainBg: "#121212", greetingTx: "#BBBBBB", userTx: "#FFFFFF", btnBg: "#42A5F5", cardBg: "#1E1E1E", cardTx: "#FFFFFF", toolbarBg: "#1E88E5", toolbarTx: "#FFFFFF", searchBg: "#1E1E1E", searchTx: "#FFFFFF", accentColor: "#42A5F5"
+            },
+            "Ocean": { 
+                mainBg: "#E0F7FA", greetingTx: "#00BCD4", userTx: "#004D40", btnBg: "#00838F", cardBg: "#B2EBF2", cardTx: "#004D40", toolbarBg: "#00BCD4", toolbarTx: "#004D40", searchBg: "#B2EBF2", searchTx: "#004D40", accentColor: "#00838F"
+            },
+            "Sunset": { 
+                mainBg: "#FFF3E0", greetingTx: "#FF7043", userTx: "#D84315", btnBg: "#BF360C", cardBg: "#FFCC80", cardTx: "#BF360C", toolbarBg: "#FF7043", toolbarTx: "#FFFFFF", searchBg: "#FFCC80", searchTx: "#D84315", accentColor: "#BF360C"
+            }
+        };
+
+        // All all necessary elements for all views
+        const elements = {
+            mainLayout: document.getElementById('mainLayout'),
+            // Dashboard Elements
+            dashboardView: document.getElementById('dashboardView'),
+            greetingText: document.getElementById('greetingText'),
+            userNameText: document.getElementById('userNameText'),
+            logoutButton: document.getElementById('logoutButton'),
+            cardTheme: document.getElementById('cardTheme'),
+            // Search View Elements
+            searchView: document.getElementById('searchView'),
+            searchToolbar: document.getElementById('searchToolbar'),
+            toolbarTitle: document.getElementById('toolbarTitle'),
+            searchBackBtn: document.getElementById('searchBackBtn'),
+            searchScrollContent: document.getElementById('searchScrollContent'),
+            searchBtn: document.getElementById('searchBtn'),
+            searchBox: document.getElementById('searchBox'),
+            resultText: document.getElementById('resultText'),
+            copyBtn: document.getElementById('copyBtn'),
+            shareBtn: document.getElementById('shareBtn'),
+            openMapBtn: document.getElementById('openMapBtn'),
+            spinner: document.getElementById('spinner'),
+            checkUpdateBtn: document.getElementById('checkUpdateBtn'),
+            searchHistoryList: document.getElementById('searchHistoryList'),
+            // Modal Elements
+            themeModal: document.getElementById('themeModal'),
+            themeOptions: document.getElementById('themeOptions'),
+            closeModalButton: document.getElementById('closeModalButton'),
+            messageModal: document.getElementById('messageModal'),
+            // JSON Debug Modal Elements (Kept for ID consistency)
+            jsonModal: document.getElementById('jsonModal'), 
+        };
+
+        const dashboardCards = [
+            'cardSearch', 'cardWeb', 'cardCalculator', 
+            'cardInstruction', 'cardDeveloper'
+        ].map(id => document.getElementById(id));
+        
+        // --- Theme Persistence and Application Logic ---
+
+        const getSavedTheme = () => localStorage.getItem(THEME_STORAGE_KEY) || THEME_DEFAULT;
+        
+        const saveTheme = (themeName) => {
+            localStorage.setItem(THEME_STORAGE_KEY, themeName);
+            applyTheme(themeName);
+        };
+
+        const applyTheme = (themeName) => {
+            const colors = THEME_COLORS[themeName] || THEME_COLORS[THEME_DEFAULT];
+            
+            // Set CSS Variable for Spinner and Scrollbar
+            document.documentElement.style.setProperty('--btn-bg-color', colors.btnBg);
+            document.documentElement.style.setProperty('--theme-accent', colors.accentColor);
+
+            // Dashboard Elements
+            if (elements.dashboardView) {
+                elements.dashboardView.style.backgroundColor = colors.mainBg;
+                elements.greetingText.style.color = colors.greetingTx;
+                elements.userNameText.style.color = colors.userTx;
+                elements.logoutButton.style.backgroundColor = colors.btnBg;
+                elements.logoutButton.style.color = '#FFFFFF'; 
+
+                [...dashboardCards, elements.cardTheme].forEach(card => {
+                    if (card) {
+                        card.style.backgroundColor = colors.cardBg;
+                        Array.from(card.children).forEach(child => {
+                            child.style.color = colors.cardTx;
+                        });
+                        card.style.borderColor = colors.cardTx;
+                    }
+                });
+            }
+
+            // Search View Elements
+            if (elements.searchView) {
+                elements.searchScrollContent.style.backgroundColor = colors.mainBg;
+                
+                // Toolbar
+                elements.searchToolbar.style.backgroundColor = colors.toolbarBg;
+                elements.toolbarTitle.style.color = colors.toolbarTx;
+                if (elements.searchBackBtn) elements.searchBackBtn.style.color = colors.toolbarTx;
+
+                // Search Button (using primary button color)
+                if (elements.searchBtn) elements.searchBtn.style.backgroundColor = colors.btnBg;
+
+                // Result Box
+                if (elements.resultText) {
+                    elements.resultText.style.backgroundColor = colors.searchBg;
+                    elements.resultText.style.color = colors.searchTx;
+                }
+                
+                // Search Input 
+                if (elements.searchBox) {
+                    elements.searchBox.style.backgroundColor = colors.cardBg;
+                    elements.searchBox.style.color = colors.cardTx;
+                }
+                
+                // Footer text
+                const footerElements = document.querySelectorAll('#searchView .text-gray-400');
+                footerElements.forEach(el => el.style.color = colors.cardTx);
+
+                // Copy and Share Buttons use fixed colors in XML, but we can theme them slightly:
+                if (elements.copyBtn) elements.copyBtn.style.backgroundColor = colors.btnBg; // Override to theme color for consistency
+                if (elements.shareBtn) elements.shareBtn.style.backgroundColor = colors.toolbarBg; // Use toolbar color for distinction
+            }
+
+            updateModalIndicators(themeName);
+        };
+        
+        // --- View Switching Logic ---
+
+        const showView = (viewId) => {
+            elements.dashboardView.classList.add('hidden', 'flex'); // Reset classes
+            elements.searchView.classList.add('hidden');
+
+            if (viewId === 'dashboardView') {
+                elements.dashboardView.classList.remove('hidden');
+                elements.dashboardView.classList.add('flex');
+            } else if (viewId === 'searchView') {
+                elements.searchView.classList.remove('hidden');
+            }
+        };
+
+        // Always show the dashboard
+        const checkAuthStatus = () => {
+            showView('dashboardView');
+            applyTheme(getSavedTheme());
+        };
+        
+        // --- History & Autocomplete Functions (Mirroring SharedPreferences) ---
+
+        const updateDatalist = () => {
+            if (elements.searchHistoryList) {
+                elements.searchHistoryList.innerHTML = '';
+                searchHistory.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    elements.searchHistoryList.appendChild(option);
+                });
+            }
+        };
+
+        const loadSearchHistory = () => {
+            const historyString = localStorage.getItem(KEY_SEARCH_HISTORY) || "";
+            if (historyString) {
+                searchHistory = historyString.split(',').map(item => item.trim()).filter(item => item.length > 0);
+            }
+            updateDatalist();
+        };
+
+        const loadLastSearch = () => {
+            const lastSearch = localStorage.getItem(KEY_LAST_SEARCH) || "";
+            if (elements.searchBox && lastSearch) {
+                elements.searchBox.value = lastSearch;
+            }
+        };
+
+        const saveLastSearch = (search) => {
+            localStorage.setItem(KEY_LAST_SEARCH, search);
+        };
+
+        const addToSearchHistory = (search) => {
+            // Remove if already exists to move it to the top (front)
+            searchHistory = searchHistory.filter(item => item !== search);
+            searchHistory.unshift(search); 
+            
+            // Limit history size to 10
+            if (searchHistory.length > 10) searchHistory.pop(); 
+            
+            localStorage.setItem(KEY_SEARCH_HISTORY, searchHistory.join(','));
+            updateDatalist();
+        };
+
+        // --- Fetch Data Task (Existing Search View Logic) ---
+        const fetchData = async (searchText) => {
+            // 1. PreExecute (UI setup)
+            elements.spinner.parentNode.classList.remove('hidden');
+            elements.searchBtn.disabled = true;
+            elements.searchBtn.textContent = 'Searching...';
+            elements.resultText.textContent = "";
+            elements.openMapBtn.classList.add('hidden');
+            currentLat = 0.0;
+            currentLong = 0.0;
+            finalResult = "";
+            
+            let errorMsg = "";
+            let found = false;
+            let resultBuilder = "";
+
+            try {
+                // Set a timeout for the fetch request
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+                const url = `${JSON_URL}?site=${encodeURIComponent(searchText)}`;
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error("Network response was not ok: " + response.status);
+
+                const jsonObject = await response.json();
+
+                const keys = Object.keys(jsonObject);
+                if (keys.length === 0) {
+                    errorMsg = "❌ কোনো তথ্য পাওয়া যায়নি।";
+                } else {
+                    for (const sheetName of keys) {
+                        const sheetArray = jsonObject[sheetName];
+
+                        if (Array.isArray(sheetArray)) {
+                            for (const rowObj of sheetArray) {
+                                for (const key in rowObj) {
+                                    if (rowObj.hasOwnProperty(key)) {
+                                        const value = String(rowObj[key]).trim();
+                                        if (value.length > 0) {
+                                            resultBuilder += `➤ ${key} = ${value}\n`; 
+                                        }
+                                    }
+                                }
+
+                                if (rowObj.hasOwnProperty("Latitude") && rowObj.hasOwnProperty("Longitude")) {
+                                    const latStr = String(rowObj["Latitude"]).trim();
+                                    const longStr = String(rowObj["Longitude"]).trim();
+                                    if (latStr && longStr) {
+                                        currentLat = parseFloat(latStr);
+                                        currentLong = parseFloat(longStr);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    finalResult = resultBuilder.trim();
+                    if (finalResult.length > 0) {
+                        found = true;
+                    } else {
+                        errorMsg = "❌ কোনো তথ্য পাওয়া যায়নি।";
+                    }
+                }
+
+            } catch (e) {
+                if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+                    errorMsg = "⚠️ ডেটা লোড করতে অনেক বেশি সময় লেগেছে (Timeout)।";
+                } else {
+                    console.error("Fetch Error:", e);
+                    errorMsg = "⚠️ ডেটা লোড করতে সমস্যা হয়েছে";
+                }
+                found = false;
+            } finally {
+                // 3. PostExecute (UI reset)
+                elements.spinner.parentNode.classList.add('hidden');
+                elements.searchBtn.disabled = false;
+                elements.searchBtn.textContent = '🔍 Search';
+
+                if (found) {
+                    elements.resultText.textContent = finalResult;
+                    if (currentLat !== 0.0 && currentLong !== 0.0) {
+                        elements.openMapBtn.classList.remove('hidden');
+                    }
+                } else {
+                    elements.resultText.textContent = errorMsg;
+                    elements.openMapBtn.classList.add('hidden');
+                    finalResult = "";
+                }
+            }
+        };
+
+        // --- Utility Functions ---
+
+        const updateModalIndicators = (currentTheme) => {
+            document.querySelectorAll('.theme-option').forEach(el => {
+                const themeName = el.getAttribute('data-theme');
+                const indicator = el.querySelector('.theme-indicator');
+                if (indicator) {
+                    if (themeName === currentTheme) {
+                        indicator.classList.remove('hidden');
+                        indicator.classList.add('bg-green-500'); 
+                    } else {
+                        indicator.classList.add('hidden');
+                        indicator.classList.remove('bg-green-500');
+                    }
+                }
+            });
+        };
+
+        const populateThemeOptions = () => {
+            elements.themeOptions.innerHTML = ''; 
+            Object.keys(THEME_COLORS).forEach(themeName => {
+                const colors = THEME_COLORS[themeName];
+                
+                const themeCard = document.createElement('div');
+                themeCard.className = 'theme-option p-3 rounded-lg shadow-md border-2 relative transition-all duration-300 hover:shadow-lg flex flex-col items-center';
+                themeCard.setAttribute('data-theme', themeName);
+                themeCard.style.backgroundColor = colors.cardBg;
+                themeCard.style.borderColor = colors.btnBg; 
+
+                themeCard.innerHTML = `
+                    <div class="w-10 h-10 rounded-full mb-2" style="background-color: ${colors.mainBg}; border: 2px solid ${colors.btnBg};"></div>
+                    <p class="text-sm font-semibold" style="color: ${colors.cardTx};">${themeName}</p>
+                    <div class="theme-indicator absolute top-1 right-1 w-3 h-3 rounded-full hidden"></div>
+                `;
+
+                themeCard.addEventListener('click', () => {
+                    saveTheme(themeName);
+                    elements.themeModal.classList.add('hidden');
+                    elements.themeModal.classList.remove('flex');
+                });
+                
+                elements.themeOptions.appendChild(themeCard);
+            });
+        };
+
+        const showMessage = (title, message = 'Action completed.', isError = false, callback = null) => {
+            const currentColors = THEME_COLORS[getSavedTheme()];
+            const modal = elements.messageModal;
+            
+            const bgColor = isError ? 'bg-red-500' : 'bg-white';
+            const textColor = isError ? 'text-white' : 'text-gray-800';
+            const buttonColor = isError ? 'bg-white text-red-500' : `text-white`;
+            const buttonStyle = isError ? '' : `background-color: ${currentColors.btnBg};`;
+
+            modal.innerHTML = `
+                <div class="${bgColor} p-6 rounded-lg shadow-2xl w-full max-w-xs text-center">
+                    <p class="text-xl font-bold mb-4 ${textColor}">${title}</p>
+                    <p class="mb-6 text-sm ${isError ? 'text-gray-100' : 'text-gray-600'}">${message}</p>
+                    <button id="closeButton" style="${buttonStyle}" class="${buttonColor} py-2 px-4 rounded-lg hover:opacity-90 transition-colors font-semibold">OK</button>
+                </div>
+            `;
+            modal.classList.add('flex');
+            
+            document.getElementById('closeButton').onclick = () => {
+                modal.classList.remove('flex');
+                modal.innerHTML = '';
+                if (callback) callback();
+            };
+        };
+
+        // --- Initialization and Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Initial Setup
+            checkAuthStatus(); // Always show dashboard
+            populateThemeOptions();
+            
+            // 2. Load History and Last Search
+            loadSearchHistory();
+            loadLastSearch();
+            
+            // 3. Dashboard and Search View Listeners
+            
+            // Site Search Card (Switch View)
+            document.getElementById('cardSearch').addEventListener('click', () => {
+                showView('searchView');
+            });
+
+            // Other Cards (Show Placeholder Message)
+            const otherCardData = [
+                { id: 'cardWeb', title: 'Web Link' },
+                { id: 'cardCalculator', title: 'Calculator' },
+                { id: 'cardInstruction', title: 'Instruction' },
+                { id: 'cardDeveloper', title: 'Developer Info' },
+            ];
+
+            otherCardData.forEach(card => {
+                document.getElementById(card.id).addEventListener('click', () => {
+                    showMessage(card.title, `Action: Navigate to ${card.title.replace(' ', '')} Page.`);
+                });
+            });
+
+            // Theme Card Listener (Open Modal)
+            elements.cardTheme.addEventListener('click', () => {
+                elements.themeModal.classList.remove('hidden');
+                elements.themeModal.classList.add('flex');
+                updateModalIndicators(getSavedTheme());
+            });
+
+            // Modal Close Listener
+            elements.closeModalButton.addEventListener('click', () => {
+                elements.themeModal.classList.add('hidden');
+                elements.themeModal.classList.remove('flex');
+            });
+
+            // Logout Button (Show message, no login view to switch to)
+            elements.logoutButton.addEventListener('click', () => {
+                showMessage('Logout Confirmation', 'আপনি কি সত্যিই লগ আউট করতে চান?', false, () => {
+                    // No login view, so just show dashboard again
+                    showView('dashboardView');
+                });
+            });
+
+            // Search View Listeners
+            elements.searchBackBtn.addEventListener('click', () => {
+                showView('dashboardView');
+            });
+
+            elements.searchBtn.addEventListener('click', () => {
+                const searchText = elements.searchBox.value.trim();
+                if (searchText) {
+                    saveLastSearch(searchText);
+                    addToSearchHistory(searchText);
+                    fetchData(searchText);
+                } else {
+                    showMessage('Input Required', 'অনুসন্ধানের জন্য Site ID লিখুন।', true);
+                }
+            });
+
+            elements.searchBox.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    elements.searchBtn.click();
+                }
+            });
+
+            elements.copyBtn.addEventListener('click', () => {
+                const textToCopy = finalResult.trim(); 
+                if (!textToCopy) {
+                    showMessage('No Content', '❗ আগে সার্চ করুন', true);
+                    return;
+                }
+                
+                try {
+                    const el = document.createElement('textarea');
+                    el.value = textToCopy;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    showMessage('Copy Successful', '✅ সব ডেটা কপি হয়েছে');
+                } catch (err) {
+                    console.error("Copy Error:", err);
+                    showMessage('Copy Error', 'কপি করা সম্ভব হয়নি।', true);
+                }
+            });
+
+            elements.shareBtn.addEventListener('click', () => {
+                const shareText = finalResult.trim();
+                if (!shareText) {
+                    showMessage('No Content', '❗ আগে সার্চ করুন', true);
+                    return;
+                }
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Site Data Share (GPIDATA)',
+                        text: shareText,
+                    }).catch(error => console.log('Error sharing or user cancelled.', error));
+                } else {
+                    showMessage('Share Action', `📤 শেয়ার করুন কোথায়... (Shared content preview: ${shareText.substring(0, 100)}...)`);
+                }
+            });
+
+            elements.openMapBtn.addEventListener('click', () => {
+                if (currentLat !== 0.0 && currentLong !== 0.0) {
+                    const mapsQuery = `${currentLat},${currentLong}`;
+                    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+                    window.open(mapUrl, '_blank');
+                } else {
+                    showMessage('Location Error', 'Lat/Long তথ্য পাওয়া যায়নি।', true);
+                }
+            });
+
+            elements.checkUpdateBtn.addEventListener('click', () => {
+                 showMessage('App Update', 'এটি একটি ওয়েব অ্যাপ্লিকেশন, তাই APK ডাউনলোড করার প্রয়োজন নেই। আপডেট স্বয়ংক্রিয়ভাবে হয়ে যায়।');
+            });
+        });
+    </script>
+</body>
+</html>
