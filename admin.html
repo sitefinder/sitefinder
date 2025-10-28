@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <!-- Firebase scripts -->
+</head>
+<body>
+    <h1>Admin Panel - User Management</h1>
+    <ul id="userList"></ul>
+
+    <script>
+        // Firebase init
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            const token = await user.getIdTokenResult();
+            if (!token.claims.admin) {
+                alert('Access denied! শুধু admin এন্ট্রি।');
+                window.location.href = 'main.html';
+                return;
+            }
+
+            // All users fetch করো (শুধু admin পারবে)
+            db.collection('users').get().then((snapshot) => {
+                const list = document.getElementById('userList');
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+                    li.innerHTML = `${data.username} (${data.email}) - DOB: ${data.dob} <button onclick="deleteUser('${doc.id}')">Delete</button>`;
+                    list.appendChild(li);
+                });
+            });
+        });
+
+        // Delete function
+        window.deleteUser = async (userId) => {
+            if (confirm('Delete this user?')) {
+                await db.collection('users').doc(userId).delete();
+                await auth.currentUser.delete();  // Account delete (optional)
+                location.reload();
+            }
+        };
+    </script>
+</body>
+</html>
