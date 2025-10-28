@@ -1,48 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Dashboard</title>
-    <!-- Firebase scripts -->
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: Arial; margin: 20px; background: #f3f4f6; }
+    h2 { color: #333; }
+    #userList { margin-top: 20px; }
+    .userCard {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+    }
+    button { margin-right: 5px; }
+    .approved { color: green; font-weight: bold; }
+    .pending { color: red; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <h1>Admin Panel - User Management</h1>
-    <ul id="userList"></ul>
+  <h2>🔐 Admin Login</h2>
+  <input id="adminEmail" placeholder="Admin Email"><br>
+  <input id="adminPassword" type="password" placeholder="Password"><br>
+  <button id="adminLoginBtn">Login</button>
+  <p id="msg"></p>
 
-    <script>
-        // Firebase init
+  <div id="adminPanel" style="display:none;">
+    <h2>👥 User Management</h2>
+    <div id="userList"></div>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-            const token = await user.getIdTokenResult();
-            if (!token.claims.admin) {
-                alert('Access denied! শুধু admin এন্ট্রি।');
-                window.location.href = 'main.html';
-                return;
-            }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-            // All users fetch করো (শুধু admin পারবে)
-            db.collection('users').get().then((snapshot) => {
-                const list = document.getElementById('userList');
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const li = document.createElement('li');
-                    li.innerHTML = `${data.username} (${data.email}) - DOB: ${data.dob} <button onclick="deleteUser('${doc.id}')">Delete</button>`;
-                    list.appendChild(li);
-                });
-            });
-        });
+    // 🔧 তোমার firebaseConfig এখানে বসাও
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-        // Delete function
-        window.deleteUser = async (userId) => {
-            if (confirm('Delete this user?')) {
-                await db.collection('users').doc(userId).delete();
-                await auth.currentUser.delete();  // Account delete (optional)
-                location.reload();
-            }
-        };
-    </script>
-</body>
-</html>
+    const ADMIN_EMAIL = "YOUR_ADMIN_EMAIL"; // 👉 এখানে তোমার নিজের ইমেইল বসাও
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const msg = document.getElementById("msg");
+    const adminPanel = document.getElementById("adminPanel");
+    const userList = document.getElementById("userList");
+
+    document.getElementById("adminLoginBtn").addEventListener("click", async () => {
+      const email = adminEmail.value;
+      const password = adminPassword.value;
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        if (userCred.user.email === ADMIN_EMAIL) {
+          msg.innerText = "✅ Admin logged in.";
+          loadUsers();
+          adminPanel.style.display = "block";
+        } else {
+          msg.innerText = "❌ You are not admin!";
+          signOut(auth);
+        }
+      } catch (err) {
+        msg.innerText = err.message;
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      adminPanel.style.display = "none";
+      msg.innerText = "Logged out.";
+    });
+
+    async function loadUsers() {
+      userList.innerHTML = "<p>Loading users...</p>";
+      const querySnapshot = await getDocs(collection(db, "users"));
+      userList.innerHTML = "";
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "userCard";
+        div.innerHTML = `
+          <p><b>${data.username}</b> (${data.email})</p>
+          <p>DOB: ${data.dob}</p>
+          <p>Status: ${data.approved ? '<span class="approved">Approved</span>' : '<span class="pending">Pending</span>'}</p>
+          <button data-id="${docSnap.id}" class="approveBtn">Approve ✅</button>
+          <button data-id="${docSnap.id}" class="removeBtn">Delete ❌</button>
+        `;
+        userList.appendChild(div);
+      });
+
+      document.querySelectorAll(".approveBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          con
