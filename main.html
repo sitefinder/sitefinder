@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Main Page</title>
+    <!-- Firebase scripts -->
+</head>
+<body>
+    <h1>Welcome to Main Page!</h1>
+    <p id="userInfo"></p>
+    <button id="logout">Logout</button>
+    <a href="admin.html" id="adminLink" style="display:none;">Admin Dashboard</a>
+
+    <script>
+        // Firebase init
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById('userInfo').innerText = `Hello, ${user.email}`;
+                // Check if admin
+                const token = await user.getIdTokenResult();
+                if (token.claims.admin) {
+                    document.getElementById('adminLink').style.display = 'block';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', () => {
+            auth.signOut();
+        });
+    </script>
+</body>
+</html>
