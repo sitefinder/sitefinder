@@ -1,58 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>Login System</title>
 </head>
 <body>
-    <form id="registerForm">
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="date" id="dob" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit">Register</button>
-    </form>
+  <h2>Register</h2>
+  <input id="email" placeholder="Email"><br>
+  <input id="username" placeholder="Username"><br>
+  <input id="dob" placeholder="YYYY-MM-DD"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+  <button id="registerBtn">Register</button>
 
-    <script>
-        // তোমার Firebase Config (Google JSON থেকে)
-        const firebaseConfig = {
-            // apiKey: "তোমার_api_key",
-            // authDomain: "তোমার_auth_domain",
-            // projectId: "তোমার_project_id",
-            // ... বাকি config
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+  <h2>Login</h2>
+  <input id="loginEmail" placeholder="Email"><br>
+  <input id="loginPassword" type="password" placeholder="Password"><br>
+  <button id="loginBtn">Login</button>
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const username = document.getElementById('username').value;
-            const dob = document.getElementById('dob').value;
-            const password = document.getElementById('password').value;
+  <p id="message"></p>
 
-            try {
-                // Account create করো
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-                // Extra data Firestore-এ save করো
-                await db.collection('users').doc(user.uid).set({
-                    username: username,
-                    dob: dob,
-                    email: email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT-rcX53-rnBOJaVHoEH5gZ1wLABOOhJM",
+  authDomain: "sitefinder-website.firebaseapp.com",
+  projectId: "sitefinder-website",
+  storageBucket: "sitefinder-website.firebasestorage.app",
+  messagingSenderId: "463431188879",
+  appId: "1:463431188879:web:07ed72bf8bb26c67620bfa",
+    };
 
-                alert('Account created! এখন login করো।');
-                window.location.href = 'login.html';  // Login page-এ redirect
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const message = document.getElementById("message");
+
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+      const emailVal = email.value;
+      const passVal = password.value;
+      const userVal = username.value;
+      const dobVal = dob.value;
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, emailVal, passVal);
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          email: emailVal,
+          username: userVal,
+          dob: dobVal,
+          approved: false,
+          createdAt: new Date()
         });
-    </script>
-</body>
-</html>
+        message.innerText = "✅ Account created! Wait for admin approval.";
+      } catch (e) {
+        message.innerText = e.message;
+      }
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
+        const docSnap = await getDoc(doc(db, "users", userCre
